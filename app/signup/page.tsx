@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
+import { registerUser } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -27,17 +28,23 @@ function SignUpContent() {
     setLoading(true);
 
     try {
-      const { data, error: authError } = await authClient.signUp.email({
-        name,
-        email,
-        password,
-        role,
-      } as any);
+      // Step 1: Register via server action (handles role correctly)
+      const result = await registerUser(name, email, password, role);
 
-      if (authError) {
-        setError(authError.message || "Could not complete registration");
+      if (result.error) {
+        setError(result.error);
         toast.error("Registration failed");
         setLoading(false);
+        return;
+      }
+
+      // Step 2: Auto sign-in after successful registration
+      const { error: signInError } = await authClient.signIn.email({ email, password });
+
+      if (signInError) {
+        // Account created but auto-login failed — redirect to login page
+        toast.success("Account created! Please sign in.");
+        window.location.href = "/login";
         return;
       }
 
