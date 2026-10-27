@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth/session";
-import { Activity, User } from "lucide-react";
+import { Activity, Stethoscope, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export async function Navbar() {
-  const user = await getCurrentUser();
-
+export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-100 bg-white/90 backdrop-blur-md">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -30,30 +27,19 @@ export async function Navbar() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3">
-          {user ? (
-            <Link
-              href={user.role === "doctor" ? "/doctor/dashboard" : "/patient/dashboard"}
-            >
-              <Button size="sm" className="bg-sky-600 hover:bg-sky-700">
-                <User className="h-4 w-4 mr-1.5" />
-                Go to Dashboard
-              </Button>
-            </Link>
-          ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/signup">
-                <Button size="sm" className="bg-sky-600 hover:bg-sky-700">
-                  Book an Appointment
-                </Button>
-              </Link>
-            </>
-          )}
+        <div className="flex items-center gap-2.5">
+          <Link href="/patient/dashboard">
+            <Button size="sm" variant="outline" className="border-teal-200 text-teal-700 hover:bg-teal-50 hover:text-teal-800">
+              <UserCheck className="h-4 w-4 mr-1.5 text-teal-600" />
+              Patient Dashboard
+            </Button>
+          </Link>
+          <Link href="/doctor/dashboard">
+            <Button size="sm" className="bg-sky-600 hover:bg-sky-700 shadow-sm shadow-sky-600/20">
+              <Stethoscope className="h-4 w-4 mr-1.5" />
+              Doctor Dashboard
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

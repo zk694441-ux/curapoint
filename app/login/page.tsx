@@ -1,39 +1,9 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { loginAction } from "@/app/actions/auth";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Activity, AlertCircle, Loader2 } from "lucide-react";
+import { Activity, Stethoscope, User, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    const result = await loginAction(email, password);
-
-    if (result.error) {
-      setError(result.error);
-      setLoading(false);
-      return;
-    }
-
-    // Hard redirect so cookies are picked up by the server layout
-    window.location.href = result.role === "doctor" ? "/doctor/dashboard" : "/patient/dashboard";
-  };
-
-  const fillDoctor = () => { setEmail("sarah.jenkins@curapoint.demo"); setPassword("DoctorPass123!"); };
-  const fillPatient = () => { setEmail("alex.morgan@curapoint.demo"); setPassword("PatientPass123!"); };
-
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50/70 p-4">
       <Link href="/" className="flex items-center gap-2 mb-6">
@@ -46,56 +16,52 @@ export default function LoginPage() {
       </Link>
 
       <Card className="w-full max-w-md shadow-lg border-slate-200">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Sign In to CuraPoint</CardTitle>
-          <CardDescription>Enter your email and password to access your health portal</CardDescription>
+        <CardHeader className="space-y-1 text-center pb-4">
+          <CardTitle className="text-2xl font-bold">Select Dashboard</CardTitle>
+          <CardDescription>
+            Direct access enabled — select which dashboard you want to view
+          </CardDescription>
         </CardHeader>
 
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{error}</span>
+        <CardContent className="space-y-3 pt-2">
+          <Link href="/patient/dashboard" className="block">
+            <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/50 hover:bg-teal-50 transition-all flex items-center justify-between group cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-lg bg-teal-600 text-white flex items-center justify-center">
+                  <User className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 group-hover:text-teal-700">Patient Dashboard</h3>
+                  <p className="text-xs text-slate-500">Alex Morgan • View appointments & health history</p>
+                </div>
               </div>
-            )}
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">Email Address</label>
-              <Input type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <ArrowRight className="h-5 w-5 text-teal-600 transition-transform group-hover:translate-x-1" />
             </div>
+          </Link>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">Password</label>
-              <Input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </div>
-
-            <div className="pt-2">
-              <p className="text-xs text-slate-400 mb-1.5 text-center font-medium">Quick Demo Logins</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" variant="outline" size="sm" className="text-xs border-dashed text-slate-600 hover:text-sky-600" onClick={fillDoctor}>
-                  Fill Doctor Demo
-                </Button>
-                <Button type="button" variant="outline" size="sm" className="text-xs border-dashed text-slate-600 hover:text-teal-600" onClick={fillPatient}>
-                  Fill Patient Demo
-                </Button>
+          <Link href="/doctor/dashboard" className="block">
+            <div className="p-4 rounded-xl border border-sky-200 bg-sky-50/50 hover:bg-sky-50 transition-all flex items-center justify-between group cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-lg bg-sky-600 text-white flex items-center justify-center">
+                  <Stethoscope className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 group-hover:text-sky-700">Doctor Dashboard</h3>
+                  <p className="text-xs text-slate-500">Dr. Sarah Jenkins • Clinical appointments & slots</p>
+                </div>
               </div>
+              <ArrowRight className="h-5 w-5 text-sky-600 transition-transform group-hover:translate-x-1" />
             </div>
-          </CardContent>
+          </Link>
 
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" disabled={loading} className="w-full bg-sky-600 hover:bg-sky-700">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
-            </Button>
-            <p className="text-xs text-center text-slate-500">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-sky-600 font-semibold hover:underline">
-                Register as Patient or Doctor
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+          <div className="pt-2">
+            <Link href="/" className="block">
+              <Button variant="ghost" className="w-full text-slate-500 text-xs">
+                Back to Landing Page
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
