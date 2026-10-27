@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, Calendar, User, LogOut, Stethoscope, Clock, Users } from "lucide-react";
-import { logoutAction } from "@/app/actions/auth";
+import { signOut } from "@/lib/auth/auth-client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -21,8 +21,9 @@ export function DashboardSidebar({ role, user }: DashboardSidebarProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await logoutAction();
-    window.location.href = "/login";
+    await signOut();
+    router.push("/login");
+    router.refresh();
   };
 
   const doctorNav = [

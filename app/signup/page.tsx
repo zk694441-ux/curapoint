@@ -3,11 +3,13 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { registerAction } from "@/app/actions/auth";
+import { authClient } from "@/lib/auth/auth-client";
+import { registerUser } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Activity, AlertCircle, Loader2, Stethoscope, User } from "lucide-react";
+import { toast } from "sonner";
 
 function SignUpContent() {
   const searchParams = useSearchParams();
@@ -25,22 +27,48 @@ function SignUpContent() {
     setError(null);
     setLoading(true);
 
-    const result = await registerAction(name, email, password, role);
+    try {
+      // Step 1: Register via server action (handles role correctly)
+      const result = await registerUser(name, email, password, role);
 
-    if (result.error) {
-      setError(result.error);
+      if (result.error) {
+        setError(result.error);
+        toast.error("Registration failed");
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Auto sign-in after successful registration
+      const { error: signInError } = await authClient.signIn.email({ email, password });
+
+      if (signInError) {
+        // Account created but auto-login failed — redirect to login page
+        toast.success("Account created! Please sign in.");
+        window.location.href = "/login";
+        return;
+      }
+
+      toast.success("Account created successfully!");
+      if (role === "doctor") {
+        window.location.href = "/doctor/profile";
+      } else {
+        window.location.href = "/patient/dashboard";
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setError(msg);
+      toast.error(msg);
       setLoading(false);
-      return;
     }
-
-    window.location.href = result.role === "doctor" ? "/doctor/profile" : "/patient/dashboard";
   };
 
   return (
     <Card className="w-full max-w-md shadow-lg border-slate-200">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">Create your Account</CardTitle>
-        <CardDescription>Join CuraPoint to book or manage medical appointments</CardDescription>
+        <CardDescription>
+          Join CuraPoint to book or manage medical appointments
+        </CardDescription>
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
@@ -55,41 +83,82 @@ function SignUpContent() {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">I am joining as a</label>
             <div className="grid grid-cols-2 gap-3">
-              <button type="button" onClick={() => setRole("patient")}
-                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition-all ${role === "patient" ? "border-sky-600 bg-sky-50 text-sky-700 font-semibold" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
-                <User className="h-4 w-4" /> Patient
+              <button
+                type="button"
+                onClick={() => setRole("patient")}
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition-all ${
+                  role === "patient"
+                    ? "border-sky-600 bg-sky-50 text-sky-700 font-semibold shadow-xs"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <User className="h-4 w-4" />
+                Patient
               </button>
-              <button type="button" onClick={() => setRole("doctor")}
-                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition-all ${role === "doctor" ? "border-sky-600 bg-sky-50 text-sky-700 font-semibold" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
-                <Stethoscope className="h-4 w-4" /> Doctor
+              <button
+                type="button"
+                onClick={() => setRole("doctor")}
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition-all ${
+                  role === "doctor"
+                    ? "border-sky-600 bg-sky-50 text-sky-700 font-semibold shadow-xs"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <Stethoscope className="h-4 w-4" />
+                Doctor
               </button>
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">Full Name</label>
-            <Input type="text" placeholder={role === "doctor" ? "Dr. Jane Doe" : "Jane Doe"} value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input
+              type="text"
+              placeholder={role === "doctor" ? "Dr. Jane Doe" : "Jane Doe"}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">Email Address</label>
-            <Input type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">Password</label>
-            <Input type="password" placeholder="At least 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            <Input
+              type="password"
+              placeholder="At least 6 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
           </div>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" disabled={loading} className="w-full bg-sky-600 hover:bg-sky-700">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-sky-600 hover:bg-sky-700"
+          >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create {role === "doctor" ? "Doctor" : "Patient"} Account
           </Button>
           <p className="text-xs text-center text-slate-500">
             Already have an account?{" "}
-            <Link href="/login" className="text-sky-600 font-semibold hover:underline">Sign in</Link>
+            <Link href="/login" className="text-sky-600 font-semibold hover:underline">
+              Sign in
+            </Link>
           </p>
         </CardFooter>
       </form>
@@ -108,6 +177,7 @@ export default function SignUpPage() {
           Cura<span className="text-sky-600">Point</span>
         </span>
       </Link>
+
       <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading form...</div>}>
         <SignUpContent />
       </Suspense>
