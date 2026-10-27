@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "@/lib/auth/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -23,24 +23,31 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await signIn.email({
+      const { data, error: authError } = await authClient.signIn.email({
         email,
         password,
       });
 
-      if (res.error) {
-        setError(res.error.message || "Invalid email or password");
+      if (authError) {
+        setError(authError.message || "Invalid email or password");
         toast.error("Sign in failed");
+        setLoading(false);
+        return;
+      }
+
+      toast.success("Welcome back!");
+      // Fetch the user to know the role and redirect
+      const session = await authClient.getSession();
+      const role = (session?.data?.user as any)?.role;
+      if (role === "doctor") {
+        window.location.href = "/doctor/dashboard";
       } else {
-        toast.success("Welcome back!");
-        // The server redirects based on role, or we trigger push
-        window.location.href = "/";
+        window.location.href = "/patient/dashboard";
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       setError(msg);
       toast.error(msg);
-    } finally {
       setLoading(false);
     }
   };
@@ -95,9 +102,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-semibold text-slate-700">Password</label>
-              </div>
+              <label className="text-xs font-semibold text-slate-700">Password</label>
               <Input
                 type="password"
                 placeholder="••••••••"

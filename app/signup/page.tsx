@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { signUp } from "@/lib/auth/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -27,28 +27,30 @@ function SignUpContent() {
     setLoading(true);
 
     try {
-      const res = await signUp.email({
+      const { data, error: authError } = await authClient.signUp.email({
         name,
         email,
         password,
+        role,
       } as any);
 
-      if (res.error) {
-        setError(res.error.message || "Could not complete registration");
+      if (authError) {
+        setError(authError.message || "Could not complete registration");
         toast.error("Registration failed");
+        setLoading(false);
+        return;
+      }
+
+      toast.success("Account created successfully!");
+      if (role === "doctor") {
+        window.location.href = "/doctor/profile";
       } else {
-        toast.success("Account created successfully!");
-        if (role === "doctor") {
-          window.location.href = "/doctor/profile";
-        } else {
-          window.location.href = "/patient/dashboard";
-        }
+        window.location.href = "/patient/dashboard";
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       setError(msg);
       toast.error(msg);
-    } finally {
       setLoading(false);
     }
   };
@@ -71,7 +73,6 @@ function SignUpContent() {
             </div>
           )}
 
-          {/* Role Switcher */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">I am joining as a</label>
             <div className="grid grid-cols-2 gap-3">
