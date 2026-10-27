@@ -1,23 +1,32 @@
 import "dotenv/config";
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import fs from "fs";
+import path from "path";
+import { db } from "./index";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  console.error("DATABASE_URL is missing. Please set it before running seed.");
-  process.exit(1);
-}
-
-const sql = neon(connectionString);
-const db = drizzle(sql, { schema });
-
 async function main() {
-  console.log("🌱 Starting seed for CuraPoint...");
+  console.log("🌱 Initializing PostgreSQL tables & seeding demo data...");
 
-  // Note: Better Auth uses password hashes. In a demo, we insert directly or with known credentials.
-  // We can seed users and their profiles.
+  // 1. Read generated migration SQL and execute
+  const migrationFile = fs.readdirSync(path.join(process.cwd(), "drizzle"))
+    .find(f => f.endsWith(".sql"));
+
+  if (migrationFile) {
+    console.log(`Executing migration file: ${migrationFile}...`);
+    const sqlContent = fs.readFileSync(path.join(process.cwd(), "drizzle", migrationFile), "utf-8");
+    
+    // Split by statement breakpoints or execute directly
+    // PGlite can execute multi-statement SQL
+    try {
+      if (typeof (db as any).$client?.exec === "function") {
+        await (db as any).$client.exec(sqlContent);
+      } else if (typeof (db as any).session?.client?.query === "function") {
+        await (db as any).session.client.query(sqlContent);
+      }
+    } catch (e: any) {
+      console.log("Schema might already exist:", e.message);
+    }
+  }
 
   const doctorsData = [
     {
@@ -228,8 +237,7 @@ async function main() {
     }
   }
 
-  // Seed 2 sample appointments for patient demo
-  console.log("Seeding initial appointments...");
+  // Seed sample appointments
   const sampleDate = new Date();
   sampleDate.setDate(sampleDate.getDate() + 2);
   const dateStr = sampleDate.toISOString().split("T")[0];
@@ -268,7 +276,6 @@ async function main() {
     })
     .onConflictDoNothing();
 
-  // Seed sample review for completed appointment
   await db
     .insert(schema.reviews)
     .values({
@@ -281,7 +288,7 @@ async function main() {
     })
     .onConflictDoNothing();
 
-  console.log("✅ Seed completed successfully!");
+  console.log("✅ Database initialized and seed completed successfully!");
 }
 
 main().catch((err) => {

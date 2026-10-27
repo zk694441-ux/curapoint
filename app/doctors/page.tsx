@@ -62,11 +62,11 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
     .from(schema.reviews)
     .groupBy(schema.reviews.doctorId);
 
-  const reviewMap = new Map(
-    reviewsData.map((r) => [r.doctorId, { avg: r.avgRating || 5.0, count: r.totalReviews }])
+  const reviewMap = new Map<string, { avg: number; count: number }>(
+    reviewsData.map((r: any) => [r.doctorId, { avg: Number(r.avgRating) || 5.0, count: Number(r.totalReviews) || 1 }])
   );
 
-  const filteredDoctors = doctorsQuery.filter((doc) => {
+  const filteredDoctors = doctorsQuery.filter((doc: any) => {
     const matchesSearch =
       search === "" ||
       doc.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -155,7 +155,7 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDoctors.map((doc) => {
+            {filteredDoctors.map((doc: any) => {
               const reviewInfo = reviewMap.get(doc.id) || { avg: 5.0, count: 1 };
               const initialLetters = doc.name
                 .replace("Dr.", "")

@@ -48,10 +48,10 @@ export default async function PatientDashboardPage() {
     .orderBy(desc(schema.appointments.date), desc(schema.appointments.startTime));
 
   const upcoming = patientAppointments.filter(
-    (a) => a.status === "confirmed" || a.status === "pending"
+    (a: any) => a.status === "confirmed" || a.status === "pending"
   );
-  const completed = patientAppointments.filter((a) => a.status === "completed");
-  const cancelled = patientAppointments.filter((a) => a.status === "cancelled");
+  const completed = patientAppointments.filter((a: any) => a.status === "completed");
+  const cancelled = patientAppointments.filter((a: any) => a.status === "cancelled");
 
   return (
     <div className="space-y-8">
@@ -109,7 +109,7 @@ export default async function PatientDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-700">
-              {patientAppointments.filter((a) => a.status === "pending").length}
+              {patientAppointments.filter((a: any) => a.status === "pending").length}
             </div>
             <p className="text-xs text-slate-400 mt-1">Pending confirmation</p>
           </CardContent>

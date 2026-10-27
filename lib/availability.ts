@@ -48,7 +48,7 @@ export async function getDoctorSlotsForDate(
         )
       );
 
-    const bookedSet = new Set(bookedAppointments.map((a) => a.startTime));
+    const bookedSet = new Set(bookedAppointments.map((a: any) => a.startTime));
 
     // 3. Generate slots based on availability rules
     const slots: TimeSlot[] = [];

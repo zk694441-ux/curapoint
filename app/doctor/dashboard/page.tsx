@@ -32,10 +32,10 @@ export default async function DoctorDashboardPage() {
     .orderBy(desc(schema.appointments.date), desc(schema.appointments.startTime));
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const todayCount = doctorAppointments.filter((a) => a.date === todayStr && a.status !== "cancelled").length;
-  const pendingCount = doctorAppointments.filter((a) => a.status === "pending").length;
-  const confirmedCount = doctorAppointments.filter((a) => a.status === "confirmed").length;
-  const completedCount = doctorAppointments.filter((a) => a.status === "completed").length;
+  const todayCount = doctorAppointments.filter((a: any) => a.date === todayStr && a.status !== "cancelled").length;
+  const pendingCount = doctorAppointments.filter((a: any) => a.status === "pending").length;
+  const confirmedCount = doctorAppointments.filter((a: any) => a.status === "confirmed").length;
+  const completedCount = doctorAppointments.filter((a: any) => a.status === "completed").length;
 
   return (
     <div className="space-y-8">

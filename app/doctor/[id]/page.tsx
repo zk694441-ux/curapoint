@@ -73,7 +73,7 @@ export default async function DoctorDetailPage({ params }: DoctorDetailPageProps
 
   const avgRating =
     reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+      ? (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : "5.0";
 
   return (
@@ -195,7 +195,7 @@ export default async function DoctorDetailPage({ params }: DoctorDetailPageProps
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {reviews.map((rev) => (
+                  {reviews.map((rev: any) => (
                     <div
                       key={rev.id}
                       className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5"
