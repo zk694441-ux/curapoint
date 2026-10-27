@@ -33,5 +33,7 @@ export const auth = betterAuth({
     // cookieCache disabled — was causing stale session reads → redirect loop
   },
   secret: process.env.BETTER_AUTH_SECRET || "curapoint_fallback_secret_must_be_set_in_production_32_bytes",
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  // VERCEL_URL is auto-set by Vercel; fallback to BETTER_AUTH_URL or localhost
+  baseURL: process.env.BETTER_AUTH_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
 });
