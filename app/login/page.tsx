@@ -36,9 +36,8 @@ export default function LoginPage() {
       }
 
       toast.success("Welcome back!");
-      // Fetch the user to know the role and redirect
-      const session = await authClient.getSession();
-      const role = (session?.data?.user as any)?.role;
+      // Use the role from the signIn response directly — no second round-trip needed
+      const role = (data?.user as any)?.role;
       if (role === "doctor") {
         window.location.href = "/doctor/dashboard";
       } else {

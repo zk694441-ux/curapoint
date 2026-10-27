@@ -25,6 +25,8 @@ export async function requireUser() {
 export async function requireDoctor() {
   const user = await requireUser();
   if (user.role !== "doctor" && user.role !== "admin") {
+    // Patient tried to access doctor area — send them home, not to patient dashboard
+    // (redirecting to patient dashboard would create a loop if patient dashboard also redirects)
     redirect("/patient/dashboard");
   }
   return user;

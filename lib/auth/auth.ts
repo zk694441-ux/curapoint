@@ -30,10 +30,7 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
-    },
+    // cookieCache disabled — was causing stale session reads → redirect loop
   },
   secret: process.env.BETTER_AUTH_SECRET || "curapoint_fallback_secret_must_be_set_in_production_32_bytes",
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
