@@ -2,16 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth/auth-client";
+import { loginAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Activity, AlertCircle, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,44 +19,20 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    try {
-      const { data, error: authError } = await authClient.signIn.email({
-        email,
-        password,
-      });
+    const result = await loginAction(email, password);
 
-      if (authError) {
-        setError(authError.message || "Invalid email or password");
-        toast.error("Sign in failed");
-        setLoading(false);
-        return;
-      }
-
-      toast.success("Welcome back!");
-      // Use the role from the signIn response directly — no second round-trip needed
-      const role = (data?.user as any)?.role;
-      if (role === "doctor") {
-        window.location.href = "/doctor/dashboard";
-      } else {
-        window.location.href = "/patient/dashboard";
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Something went wrong";
-      setError(msg);
-      toast.error(msg);
+    if (result.error) {
+      setError(result.error);
       setLoading(false);
+      return;
     }
+
+    // Hard redirect so cookies are picked up by the server layout
+    window.location.href = result.role === "doctor" ? "/doctor/dashboard" : "/patient/dashboard";
   };
 
-  const fillDoctorDemo = () => {
-    setEmail("sarah.jenkins@curapoint.demo");
-    setPassword("DoctorPass123!");
-  };
-
-  const fillPatientDemo = () => {
-    setEmail("alex.morgan@curapoint.demo");
-    setPassword("PatientPass123!");
-  };
+  const fillDoctor = () => { setEmail("sarah.jenkins@curapoint.demo"); setPassword("DoctorPass123!"); };
+  const fillPatient = () => { setEmail("alex.morgan@curapoint.demo"); setPassword("PatientPass123!"); };
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50/70 p-4">
@@ -75,9 +48,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-lg border-slate-200">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Sign In to CuraPoint</CardTitle>
-          <CardDescription>
-            Enter your email and password to access your health portal
-          </CardDescription>
+          <CardDescription>Enter your email and password to access your health portal</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
@@ -91,46 +62,21 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700">Email Address</label>
-              <Input
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Input type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700">Password</label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <Input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
 
-            {/* Quick Demo Fill Buttons */}
             <div className="pt-2">
               <p className="text-xs text-slate-400 mb-1.5 text-center font-medium">Quick Demo Logins</p>
               <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-dashed text-slate-600 hover:text-sky-600"
-                  onClick={fillDoctorDemo}
-                >
+                <Button type="button" variant="outline" size="sm" className="text-xs border-dashed text-slate-600 hover:text-sky-600" onClick={fillDoctor}>
                   Fill Doctor Demo
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-dashed text-slate-600 hover:text-teal-600"
-                  onClick={fillPatientDemo}
-                >
+                <Button type="button" variant="outline" size="sm" className="text-xs border-dashed text-slate-600 hover:text-teal-600" onClick={fillPatient}>
                   Fill Patient Demo
                 </Button>
               </div>
@@ -138,11 +84,7 @@ export default function LoginPage() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-sky-600 hover:bg-sky-700"
-            >
+            <Button type="submit" disabled={loading} className="w-full bg-sky-600 hover:bg-sky-700">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
